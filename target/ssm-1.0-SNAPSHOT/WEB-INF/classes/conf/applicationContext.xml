@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
+
+
+    <context:property-placeholder location="classpath:conf/jdbc.properties" />
+    <!--spring配置文件，声明service，dao对象-->
+
+    <!--数据源-->
+    <bean id="myDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="url" value="${jdbc.url}" />
+        <property name="username" value="${jdbc.username}" />
+        <property name="password" value="${jdbc.password}" />
+        <property name="maxActive" value="20" />
+    </bean>
+
+    <!--声明的是mybatis中提供的SqlSessionFactoryBean类，这个类内部创建SqlSessionFactory的-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--连接池赋给dataSource属性-->
+        <property name="dataSource" ref="myDataSource" />
+        <!--mybatis主配置文件的位置
+            configLocation属性是Resource类型，读取配置文件
+            赋值使用value，指定文件路径，使用classpath:表示文件的位置
+        -->
+        <property name="configLocation" value="classpath:conf/mybatis.xml" />
+    </bean>
+
+
+    <!--创建dao对象，使用SqlSession的getMapper（Student.class）
+        MapperScannerConfigurer:在内部调用getMapper()生成每个dao接口的代理对象
+    -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--指定SqlSessionFactory对象的id-->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+        <!--指定包名，包名是dao接口所在的包名
+            MapperScannerConfigurer会扫描这个包中的所有接口，把每个接口
+            都执行getMapper()方法，得到每个接口的dao对象
+            创建好的dao对象放入spring容器
+            多个包用逗号分隔
+        -->
+        <property name="basePackage" value="com/bjpowernode/dao" />
+    </bean>
+
+
+    <!--声明service的注解扫描枪-->
+    <context:component-scan base-package="com.bjpowernode.service" />
+
+</beans>
